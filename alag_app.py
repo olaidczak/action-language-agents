@@ -320,6 +320,56 @@ EXAMPLES = [
         "query_agent": "ag",
         "expected": "Build: spójny model. holds {f} at 2 = YES. involved ag = YES.",
     },
+    {
+        "name": "12. Kilka preconditions w jednej regule",
+        "description": (
+            "To jest dokładnie przypadek z konsultacji: jedna reguła może mieć kilka warunków w części if. "
+            "Reguła unlock by ag causes opened if has_key, near_door, ~blocked odpala tylko wtedy, gdy wszystkie "
+            "te literaly zachodzą w chwili wykonania akcji. Precondition P jest zbiorem literali, a nie pojedynczym literalem."
+        ),
+        "fluents": ["opened", "has_key", "near_door", "blocked"],
+        "actions": ["unlock"],
+        "agents": ["ag"],
+        "T": 1,
+        "statements": [
+            {"action": "unlock", "agent": "ag", "effect": "opened", "precondition": "has_key, near_door, ~blocked"},
+        ],
+        "observations": [
+            {"literals": "has_key, near_door, ~blocked", "t": 0},
+        ],
+        "occurrences": [
+            {"action": "unlock", "agent": "ag", "t": 0},
+        ],
+        "query_lits": "opened",
+        "query_t": 1,
+        "query_agent": "ag",
+        "expected": "Build: spójny model. holds {opened} at 1 = YES. involved ag = YES.",
+    },
+    {
+        "name": "13. Kilka preconditions — jedna niespełniona blokuje efekt",
+        "description": (
+            "Ten przykład pokazuje drugą stronę poprzedniego. Reguła nadal wymaga has_key, near_door oraz ~blocked, "
+            "ale obserwacja mówi blocked w chwili 0. Ponieważ nie są spełnione wszystkie preconditions, akcja wykonuje się "
+            "z pustym efektem: opened nie jest wymuszone, a agent nie jest involved."
+        ),
+        "fluents": ["opened", "has_key", "near_door", "blocked"],
+        "actions": ["unlock"],
+        "agents": ["ag"],
+        "T": 1,
+        "statements": [
+            {"action": "unlock", "agent": "ag", "effect": "opened", "precondition": "has_key, near_door, ~blocked"},
+        ],
+        "observations": [
+            {"literals": "has_key, near_door, blocked", "t": 0},
+        ],
+        "occurrences": [
+            {"action": "unlock", "agent": "ag", "t": 0},
+        ],
+        "query_lits": "opened",
+        "query_t": 1,
+        "query_agent": "ag",
+        "expected": "Build: spójny model. holds {opened} at 1 = NO. involved ag = NO.",
+    },
 ]
 
 
@@ -488,7 +538,7 @@ class App(tk.Tk):
         ttk.Button(top, text="Remove selected", command=self._remove_statement).grid(row=2, column=2, pady=8, sticky="w")
         ttk.Label(
             top,
-            text="Negation: ~f, -f, !f, not f, or ¬f. Empty field means empty set. Multiple statements for one action are allowed.",
+            text="Negation: ~f, -f, !f, not f, or ¬f. Empty field means empty set. For many preconditions write e.g. g, h, ~p. Multiple statements for one action are allowed.",
             foreground="#666",
             wraplength=900,
         ).grid(row=3, column=0, columnspan=4, sticky="w", padx=4, pady=(0, 6))
@@ -584,6 +634,15 @@ class App(tk.Tk):
         ttk.Spinbox(ao_box, from_=0, to=50, textvariable=self.sc_t, width=6).grid(row=0, column=5, padx=4)
         ttk.Button(ao_box, text="Add", command=self._add_occ).grid(row=0, column=6, padx=8)
         ttk.Button(ao_box, text="Remove selected", command=self._remove_occ).grid(row=0, column=7, padx=4)
+        ttk.Label(
+            ao_box,
+            text=(
+                "DS8 uses sequential actions: max one action may start at a given t. "
+                "Multiple observations at the same t are allowed only if they are consistent."
+            ),
+            foreground="#666",
+            wraplength=900,
+        ).grid(row=1, column=0, columnspan=8, sticky="w", padx=4, pady=(2, 4))
 
         self.occ_list = tk.Listbox(f, height=8, font=("Courier", 10))
         self.occ_list.pack(fill="both", expand=True, padx=8, pady=4)

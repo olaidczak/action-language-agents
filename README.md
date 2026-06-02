@@ -34,6 +34,10 @@ Przykłady obejmują:
 9. Wzajemnie sprzeczne obserwacje w tym samym timepoincie.
 10. Akcja przygotowująca tworzy stan `g=true, h=true`, przez co późniejsza akcja ma sprzeczne efekty.
 11. Te same sprzeczne reguły, ale bez odpalenia konfliktu; wydruk pokazuje minimalne `O`.
+12. Kilka preconditions w jednej regule, np. `unlock by ag causes opened if has_key, near_door, ~blocked`.
+13. Kilka preconditions, ale jedna niespełniona — akcja wykonuje się z pustym efektem.
+
+Uwaga praktyczna: część `if P` przyjmuje cały zbiór literałów. Wpisz warunki po przecinku albo spacjach, np. `g, h, ~p` lub `{g; h; ~p}`. Wszystkie muszą zachodzić w chwili wykonania akcji, żeby reguła odpaliła. W jednym timepoincie może być wiele obserwacji, o ile nie są sprzeczne, ale nie mogą startować dwie akcje, bo DS8 zakłada akcje sekwencyjne.
 
 ## Uruchomienie testów
 
@@ -41,11 +45,11 @@ Przykłady obejmują:
 python example_tests.py
 ```
 
-Testy sprawdzają m.in. wiele `causes`, involved, wsteczne wnioskowanie przez inercję, sprzeczne obserwacje, sprzeczne skutki akcji, przypadek agenta bez efektu oraz wszystkie przykłady z GUI.
+Testy sprawdzają m.in. wiele `causes`, wiele preconditions w jednej regule, involved, wsteczne wnioskowanie przez inercję, sprzeczne obserwacje, sprzeczne skutki akcji, przypadek agenta bez efektu oraz wszystkie przykłady z GUI.
 
 ## Najważniejsze poprawki
 
-- Dopuszczone jest wiele instrukcji `A by ag causes E if P` dla tej samej akcji/agenta; efekty są łączone, jeśli kilka preconditions zachodzi naraz.
+- Dopuszczone jest wiele instrukcji `A by ag causes E if P` dla tej samej akcji/agenta; dodatkowo jedna instrukcja może mieć wiele preconditions w `P`, np. `if g, h, ~p`.
 - Jeśli dwie odpalone reguły wymagają różnych wartości tego samego fluentu, scenariusz jest niespójny, bo funkcja `H` nie może mieć jednocześnie `f=0` i `f=1`.
 - Obserwacje z przyszłych timepointów filtrują dopuszczalne stany początkowe, więc działa wnioskowanie „wstecz” przez inercję.
 - Zasada inercji jest zachowana: poza minimalnym zbiorem `O(A,t+1)` wartości fluentów są kopiowane z poprzedniego timepointu.

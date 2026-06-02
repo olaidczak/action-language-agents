@@ -178,6 +178,79 @@ def test_agent_without_matching_rule_has_empty_effect():
     print("OK: non-designated agent executes action with empty effect")
 
 
+def test_multiple_preconditions_must_all_hold():
+    sig = Signature(
+        fluents={"opened", "has_key", "near_door", "blocked"},
+        actions={"unlock"},
+        agents={"ag"},
+        T=1,
+    )
+    D = DomainDescription([
+        ActionEffect(
+            "unlock",
+            {L("opened")},
+            parse_literal_set("has_key, near_door, ~blocked"),
+            "ag",
+        )
+    ])
+    Sc = Scenario(
+        observations=[Observation(parse_literal_set("has_key, near_door, ~blocked"), 0)],
+        occurrences=[ActionOccurrence("unlock", "ag", 0)],
+    )
+    ms = build_model(sig, D, Sc)
+    assert query_holds(ms, {L("opened")}, 1)
+    assert ms.representative.O[("unlock", 1)] == {"opened"}
+    assert query_involved(ms, "ag")
+    print("OK: one causes statement can require many preconditions")
+
+
+def test_multiple_preconditions_missing_one_gives_empty_effect():
+    sig = Signature(
+        fluents={"opened", "has_key", "near_door", "blocked"},
+        actions={"unlock"},
+        agents={"ag"},
+        T=1,
+    )
+    D = DomainDescription([
+        ActionEffect(
+            "unlock",
+            {L("opened")},
+            parse_literal_set("has_key, near_door, ~blocked"),
+            "ag",
+        )
+    ])
+    Sc = Scenario(
+        observations=[Observation(parse_literal_set("has_key, near_door, blocked"), 0)],
+        occurrences=[ActionOccurrence("unlock", "ag", 0)],
+    )
+    ms = build_model(sig, D, Sc)
+    assert not query_holds(ms, {L("opened")}, 1)
+    assert ms.representative.O[("unlock", 1)] == set()
+    assert not query_involved(ms, "ag")
+    print("OK: if one of many preconditions fails, the action has empty effect")
+
+
+def test_multiple_consistent_observations_same_time_are_allowed():
+    sig = Signature(fluents={"f", "g"}, actions={"wait"}, agents={"ag"}, T=1)
+    D = DomainDescription([ActionEffect("wait", set(), set(), "ag")])
+    Sc = Scenario(observations=[Observation({L("f")}, 0), Observation({L("g")}, 0)])
+    ms = build_model(sig, D, Sc)
+    assert query_holds(ms, {L("f"), L("g")}, 0)
+    print("OK: many consistent observations at one timepoint are allowed")
+
+
+def test_two_actions_same_timepoint_are_rejected():
+    sig = Signature(fluents={"f", "g"}, actions={"a", "b"}, agents={"ag"}, T=1)
+    D = DomainDescription([
+        ActionEffect("a", {L("f")}, set(), "ag"),
+        ActionEffect("b", {L("g")}, set(), "ag"),
+    ])
+    Sc = Scenario(occurrences=[ActionOccurrence("a", "ag", 0), ActionOccurrence("b", "ag", 0)])
+    msg = _expect_inconsistent(sig, D, Sc)
+    assert "same timepoint" in msg or "sequential" in msg
+    print("OK: two actions at the same timepoint are rejected")
+
+
 def test_all_gui_examples_are_executable_at_engine_level():
     for ex in EXAMPLES:
         sig = Signature(
@@ -221,4 +294,8 @@ if __name__ == "__main__":
     test_no_conflict_when_conditions_do_not_cooccur()
     test_prior_action_can_create_conflict_later()
     test_agent_without_matching_rule_has_empty_effect()
+    test_multiple_preconditions_must_all_hold()
+    test_multiple_preconditions_missing_one_gives_empty_effect()
+    test_multiple_consistent_observations_same_time_are_allowed()
+    test_two_actions_same_timepoint_are_rejected()
     test_all_gui_examples_are_executable_at_engine_level()
