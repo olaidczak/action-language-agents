@@ -55,4 +55,3 @@ Testy sprawdzają m.in. wiele `causes`, wiele preconditions w jednej regule, inv
 - Zasada inercji jest zachowana: poza minimalnym zbiorem `O(A,t+1)` wartości fluentów są kopiowane z poprzedniego timepointu.
 - `involved ag in Sc` zwraca `YES` tylko wtedy, gdy w każdym modelu agent ma przynajmniej jedną akcję z niepustym minimalnym efektem/occlusion.
 - Akcje mogą zaczynać się tylko w `t = 0, ..., T-1`, bo trwają jedną jednostkę czasu i kończą się w `t+1`.
-- Przycisk **Wczytaj przykład + zbuduj** został sprawdzony i teraz po zbudowaniu dopisuje również domyślne Q1/Q2, żeby było od razu widać wynik.
