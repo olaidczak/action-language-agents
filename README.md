@@ -1,30 +1,54 @@
-# Action Language with Agents
+# Action Language with Agents — poprawiony program
 
-A GUI tool for reasoning about actions, agents, and their effects over time using a simple action language formalism.
-
-## Requirements
-
-Python 3.10+ with `tkinter`
-
-## Run
+## Uruchomienie GUI
 
 ```bash
 python alag_app.py
 ```
 
-## Usage
+Program składa się z trzech plików kodu:
 
-The interface has four tabs:
+- `alag_engine.py` — silnik semantyki, budowanie modeli i obsługa zapytań Q1/Q2,
+- `alag_app.py` — aplikacja Tkinter z formularzami i przykładami,
+- `example_tests.py` — testy regresyjne/przykłady do szybkiego sprawdzenia silnika.
 
-1. **Signature** - define fluents, actions, agents, and time T
-2. **Domain description** - add effect statements: `A causes E if P by ag`
-3. **Scenario** - add observations `(literals, t)` and action occurrences `(action, agent, t)`
-4. **Query & run** - build the model and run queries:
-   - `holds a at t` - are literals `a` true at time `t`?
-   - `involved ag` - did agent `ag` cause at least one non empty effect?
+## Gotowe przykłady w programie
 
-## Notation
+Po uruchomieniu programu pierwsza zakładka to **0. PRZYKŁADY**. Wybierasz przykład z listy i klikasz:
 
-- Positive literal: `f`
-- Negative literal: `~f`
-- Multiple literals: comma separated, e.g. `f1, ~f2`
+- **Wczytaj przykład** — program uzupełnia `F`, `Ac`, `Ag`, `T`, reguły `causes`, obserwacje, akcje oraz domyślne query.
+- **Wczytaj przykład + zbuduj** — robi to samo, od razu buduje modele i dla spójnych scenariuszy automatycznie wypisuje domyślne odpowiedzi na Q1/Q2.
+
+Dwuklik na nazwie przykładu także wczytuje go i od razu buduje model. Ten sam wybór przykładu jest dostępny w zakładce **1. Signature** pod polami sygnatury.
+
+Przykłady obejmują:
+
+1. `a by Agent causes f` — prosty efekt, Q1 i Q2 `involved`.
+2. Wiele reguł `causes` dla jednej akcji i jednego agenta.
+3. Wsteczne zawężanie modeli przez późniejszą obserwację i inercję (`wait`).
+4. Sprzeczne obserwacje po samych akcjach `wait`.
+5. Sprzeczne efekty `f` i `~f`, gdy warunki `g` i `h` zachodzą razem.
+6. Brak sprzeczności, gdy odpala tylko jedna z warunkowych reguł.
+7. Agent bez pasującej reguły dla akcji — pusty efekt i `involved = NO`.
+8. Jawne reguły tożsamości dla `wait`: `wait by bob causes stolen if stolen` oraz `wait by bob causes ~stolen if ~stolen`.
+9. Wzajemnie sprzeczne obserwacje w tym samym timepoincie.
+10. Akcja przygotowująca tworzy stan `g=true, h=true`, przez co późniejsza akcja ma sprzeczne efekty.
+11. Te same sprzeczne reguły, ale bez odpalenia konfliktu; wydruk pokazuje minimalne `O`.
+
+## Uruchomienie testów
+
+```bash
+python example_tests.py
+```
+
+Testy sprawdzają m.in. wiele `causes`, involved, wsteczne wnioskowanie przez inercję, sprzeczne obserwacje, sprzeczne skutki akcji, przypadek agenta bez efektu oraz wszystkie przykłady z GUI.
+
+## Najważniejsze poprawki
+
+- Dopuszczone jest wiele instrukcji `A by ag causes E if P` dla tej samej akcji/agenta; efekty są łączone, jeśli kilka preconditions zachodzi naraz.
+- Jeśli dwie odpalone reguły wymagają różnych wartości tego samego fluentu, scenariusz jest niespójny, bo funkcja `H` nie może mieć jednocześnie `f=0` i `f=1`.
+- Obserwacje z przyszłych timepointów filtrują dopuszczalne stany początkowe, więc działa wnioskowanie „wstecz” przez inercję.
+- Zasada inercji jest zachowana: poza minimalnym zbiorem `O(A,t+1)` wartości fluentów są kopiowane z poprzedniego timepointu.
+- `involved ag in Sc` zwraca `YES` tylko wtedy, gdy w każdym modelu agent ma przynajmniej jedną akcję z niepustym minimalnym efektem/occlusion.
+- Akcje mogą zaczynać się tylko w `t = 0, ..., T-1`, bo trwają jedną jednostkę czasu i kończą się w `t+1`.
+- Przycisk **Wczytaj przykład + zbuduj** został sprawdzony i teraz po zbudowaniu dopisuje również domyślne Q1/Q2, żeby było od razu widać wynik.
