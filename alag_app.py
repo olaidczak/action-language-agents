@@ -50,7 +50,7 @@ EXAMPLES = [
         "query_lits": "f",
         "query_t": 1,
         "query_agent": "Agent",
-        "expected": "Build: spójny model. Query holds {f} at 1 = YES. Query involved Agent = YES.",
+        "expected": "Build: consistent model set. Query holds {f} at 1 = YES. Query involved Agent = YES.",
     },
     {
         "name": "2. Wiele causes dla jednej akcji + involved",
@@ -76,7 +76,7 @@ EXAMPLES = [
         "query_lits": "f, h",
         "query_t": 1,
         "query_agent": "ag",
-        "expected": "Build: spójny model. holds {f,h} at 1 = YES. involved ag = YES.",
+        "expected": "Build: consistent model set. holds {f,h} at 1 = YES. involved ag = YES.",
     },
     {
         "name": "3. Obserwacja w przyszłości działa wstecz przez wait",
@@ -104,7 +104,7 @@ EXAMPLES = [
         "query_lits": "stolen",
         "query_t": 0,
         "query_agent": "bob",
-        "expected": "Build: spójny model. holds {stolen} at 0 = YES. involved bob = NO, bo wait ma pusty efekt.",
+        "expected": "Build: consistent model set. holds {stolen} at 0 = YES. involved bob = NO, because wait has an empty effect.",
     },
     {
         "name": "4. Sprzeczne obserwacje po samych wait",
@@ -160,7 +160,7 @@ EXAMPLES = [
         "query_lits": "f",
         "query_t": 1,
         "query_agent": "ag",
-        "expected": "Build: INCONSISTENT SCENARIO, bo efekty f i ~f odpalają razem.",
+        "expected": "Build: INCONSISTENT SCENARIO, because the effects f and ~f fire together.",
     },
     {
         "name": "6. Brak sprzeczności, gdy odpala tylko jedna reguła",
@@ -187,7 +187,7 @@ EXAMPLES = [
         "query_lits": "f",
         "query_t": 1,
         "query_agent": "ag",
-        "expected": "Build: spójny model. holds {f} at 1 = YES. involved ag = YES.",
+        "expected": "Build: consistent model set. holds {f} at 1 = YES. involved ag = YES.",
     },
     {
         "name": "7. Agent bez reguły dla akcji ma pusty efekt",
@@ -210,7 +210,7 @@ EXAMPLES = [
         "query_lits": "f",
         "query_t": 1,
         "query_agent": "Bob",
-        "expected": "Build: spójny model. holds {f} at 1 = NO. involved Bob = NO.",
+        "expected": "Build: consistent model set. holds {f} at 1 = NO. involved Bob = NO.",
     },
     {
         "name": "8. Wait jako reguły tożsamości + sprzeczne obserwacje",
@@ -241,7 +241,7 @@ EXAMPLES = [
         "query_lits": "stolen",
         "query_t": 4,
         "query_agent": "bob",
-        "expected": "Build: INCONSISTENT SCENARIO, bo wait nie zmienia stolen na przeciwną wartość.",
+        "expected": "Build: INCONSISTENT SCENARIO, because wait cannot change stolen to the opposite value.",
     },
     {
         "name": "9. Sprzeczne obserwacje w tej samej chwili",
@@ -264,7 +264,7 @@ EXAMPLES = [
         "query_lits": "f",
         "query_t": 0,
         "query_agent": "ag",
-        "expected": "Build: INCONSISTENT SCENARIO, bo obserwacje wymagają f=1 i f=0 jednocześnie.",
+        "expected": "Build: INCONSISTENT SCENARIO, because observations require f=1 and f=0 at the same time.",
     },
     {
         "name": "10. Sprzeczne reguły dopiero po akcji przygotowującej",
@@ -290,7 +290,7 @@ EXAMPLES = [
         "query_lits": "f",
         "query_t": 2,
         "query_agent": "ag",
-        "expected": "Build: INCONSISTENT SCENARIO, bo prepare tworzy g i h, a potem a ma sprzeczne efekty.",
+        "expected": "Build: INCONSISTENT SCENARIO, because prepare creates g and h, and then a has conflicting effects.",
     },
     {
         "name": "11. Te same sprzeczne reguły, ale bez odpalenia konfliktu",
@@ -318,7 +318,7 @@ EXAMPLES = [
         "query_lits": "f",
         "query_t": 2,
         "query_agent": "ag",
-        "expected": "Build: spójny model. holds {f} at 2 = YES. involved ag = YES.",
+        "expected": "Build: consistent model set. holds {f} at 2 = YES. involved ag = YES.",
     },
     {
         "name": "12. Kilka preconditions w jednej regule",
@@ -343,7 +343,7 @@ EXAMPLES = [
         "query_lits": "opened",
         "query_t": 1,
         "query_agent": "ag",
-        "expected": "Build: spójny model. holds {opened} at 1 = YES. involved ag = YES.",
+        "expected": "Build: consistent model set. holds {opened} at 1 = YES. involved ag = YES.",
     },
     {
         "name": "13. Kilka preconditions — jedna niespełniona blokuje efekt",
@@ -368,7 +368,7 @@ EXAMPLES = [
         "query_lits": "opened",
         "query_t": 1,
         "query_agent": "ag",
-        "expected": "Build: spójny model. holds {opened} at 1 = NO. involved ag = NO.",
+        "expected": "Build: consistent model set. holds {opened} at 1 = NO. involved ag = NO.",
     },
 ]
 
@@ -440,9 +440,9 @@ class App(tk.Tk):
             row=5, column=1, sticky="w", padx=6, pady=12
         )
 
-        quick = ttk.LabelFrame(f, text="Szybkie wczytanie przykładu")
+        quick = ttk.LabelFrame(f, text="Quick example loading")
         quick.grid(row=6, column=0, columnspan=2, sticky="we", padx=8, pady=(8, 4))
-        ttk.Label(quick, text="Przykład:").grid(row=0, column=0, sticky="e", padx=6, pady=6)
+        ttk.Label(quick, text="Example:").grid(row=0, column=0, sticky="e", padx=6, pady=6)
         self.quick_example_combo = ttk.Combobox(
             quick,
             values=[ex["name"] for ex in EXAMPLES],
@@ -453,12 +453,12 @@ class App(tk.Tk):
         self.quick_example_combo.current(0)
         ttk.Button(
             quick,
-            text="Wczytaj przykład",
+            text="Load example",
             command=lambda: self._load_quick_example(build=False),
         ).grid(row=0, column=2, sticky="w", padx=4, pady=6)
         ttk.Button(
             quick,
-            text="Wczytaj przykład + zbuduj",
+            text="Load example + build",
             command=lambda: self._load_quick_example(build=True),
         ).grid(row=0, column=3, sticky="w", padx=4, pady=6)
         quick.columnconfigure(1, weight=1)
@@ -466,8 +466,8 @@ class App(tk.Tk):
         ttk.Label(
             f,
             text=(
-                "Po wczytaniu przykładu program sam uzupełnia F, Ac, Ag, T, reguły causes, "
-                "obserwacje, akcje i domyślne query."
+                "After loading an example, the program automatically fills F, Ac, Ag, T, causes rules, "
+                "observations, action occurrences, and the default query."
             ),
             foreground="#444",
             wraplength=900,
@@ -864,14 +864,14 @@ class App(tk.Tk):
     # ----- Tab 5: Examples -----
     def _build_examples_tab(self, nb):
         f = ttk.Frame(nb)
-        nb.add(f, text="0. PRZYKŁADY")
+        nb.add(f, text="0. Examples")
 
-        top = ttk.LabelFrame(f, text="Gotowe przykłady z konsultacji")
+        top = ttk.LabelFrame(f, text="Ready examples")
         top.pack(fill="both", expand=True, padx=8, pady=8)
 
         left = ttk.Frame(top)
         left.pack(side="left", fill="y", padx=(8, 6), pady=8)
-        ttk.Label(left, text="Wybierz przykład:").pack(anchor="w")
+        ttk.Label(left, text="Choose an example:").pack(anchor="w")
         self.examples_list = tk.Listbox(left, height=18, width=46, exportselection=False)
         self.examples_list.pack(fill="y", expand=False, pady=(4, 8))
         for ex in EXAMPLES:
@@ -879,14 +879,14 @@ class App(tk.Tk):
         self.examples_list.bind("<<ListboxSelect>>", lambda _event: self._show_selected_example_info())
         self.examples_list.bind("<Double-Button-1>", lambda _event: self._load_selected_example(build=True))
 
-        ttk.Button(left, text="Wczytaj przykład", command=lambda: self._load_selected_example(build=False)).pack(fill="x", pady=2)
-        ttk.Button(left, text="Wczytaj przykład + zbuduj", command=lambda: self._load_selected_example(build=True)).pack(fill="x", pady=2)
+        ttk.Button(left, text="Load example", command=lambda: self._load_selected_example(build=False)).pack(fill="x", pady=2)
+        ttk.Button(left, text="Load example + build", command=lambda: self._load_selected_example(build=True)).pack(fill="x", pady=2)
 
         right = ttk.Frame(top)
         right.pack(side="left", fill="both", expand=True, padx=(6, 8), pady=8)
         ttk.Label(
             right,
-            text="Opis przykładu i oczekiwany wynik:",
+            text="Example description and expected result:",
         ).pack(anchor="w")
         self.examples_info = scrolledtext.ScrolledText(right, font=("Courier New", 10), wrap="word", height=20)
         self.examples_info.pack(fill="both", expand=True, pady=(4, 0))
@@ -955,7 +955,7 @@ class App(tk.Tk):
             "Expected:",
             f"  {ex['expected']}",
             "",
-            "Tip: double-click na nazwie przykładu wczytuje go i od razu buduje model.",
+            "Tip: double-click an example name to load it and build the model immediately.",
         ])
         return "\n".join(lines)
 
@@ -987,7 +987,7 @@ class App(tk.Tk):
             if hasattr(self, "out"):
                 self.out.delete("1.0", "end")
                 self.out.insert("end", self._format_example_info(ex))
-                self.out.insert("end", "\n\nKliknij 'Build models & show trajectory', aby uruchomić ten przykład.\n")
+                self.out.insert("end", "\n\nClick 'Build models & show trajectory' to run this example.\n")
 
     def _append_default_query_answers(self, ex: dict):
         """Run and print the example's default Q1/Q2 without showing popups."""

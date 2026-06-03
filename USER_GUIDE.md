@@ -23,11 +23,11 @@ A window titled **Action Language with Agents** should open.
 
 ## 3. Using built-in examples
 
-The first tab is **0. PRZYKŁADY**. It contains ready scenarios prepared for demonstration.
+The first tab is **0. Examples**. It contains ready scenarios prepared for demonstration.
 
 1. Select an example from the list.
-2. Click **Wczytaj przykład** to fill the fields automatically.
-3. Click **Wczytaj przykład + zbuduj** to fill the fields and immediately build the model set.
+2. Click **Load example** to fill the fields automatically.
+3. Click **Load example + build** to fill the fields and immediately build the model set.
 4. Check the generated trajectory, occlusion sets, and query answers in the output panel.
 
 Recommended examples for presentation:
@@ -124,6 +124,7 @@ For Q2 the program answers `YES` only if the agent has at least one action occur
 Run:
 
 ```bash
+python -m py_compile alag_engine.py alag_app.py example_tests.py
 python example_tests.py
 ```
 

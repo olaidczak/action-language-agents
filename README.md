@@ -1,57 +1,57 @@
-# Action Language with Agents — poprawiony program
+# Action Language with Agents
 
-## Uruchomienie GUI
+## Running the GUI
 
 ```bash
 python alag_app.py
 ```
 
-Program składa się z trzech plików kodu:
+The program consists of three source files:
 
-- `alag_engine.py` — silnik semantyki, budowanie modeli i obsługa zapytań Q1/Q2,
-- `alag_app.py` — aplikacja Tkinter z formularzami i przykładami,
-- `example_tests.py` — testy regresyjne/przykłady do szybkiego sprawdzenia silnika.
+- `alag_engine.py` — reasoning engine, model construction, and Q1/Q2 query evaluation,
+- `alag_app.py` — Tkinter GUI with forms and built-in examples,
+- `example_tests.py` — regression tests and runnable examples for checking the engine.
 
-## Gotowe przykłady w programie
+## Built-in examples
 
-Po uruchomieniu programu pierwsza zakładka to **0. PRZYKŁADY**. Wybierasz przykład z listy i klikasz:
+After starting the program, the first tab is **0. Examples**. Select an example and use:
 
-- **Wczytaj przykład** — program uzupełnia `F`, `Ac`, `Ag`, `T`, reguły `causes`, obserwacje, akcje oraz domyślne query.
-- **Wczytaj przykład + zbuduj** — robi to samo, od razu buduje modele i dla spójnych scenariuszy automatycznie wypisuje domyślne odpowiedzi na Q1/Q2.
+- **Load example** — fills `F`, `Ac`, `Ag`, `T`, `causes` rules, observations, action occurrences, and the default query.
+- **Load example + build** — loads the example and immediately builds the model set. For consistent scenarios, it also prints the default answers for Q1 and Q2.
 
-Dwuklik na nazwie przykładu także wczytuje go i od razu buduje model. Ten sam wybór przykładu jest dostępny w zakładce **1. Signature** pod polami sygnatury.
+Double-clicking an example name also loads it and immediately builds the model set. The same quick example selector is available on the **1. Signature** tab.
 
-Przykłady obejmują:
+The examples cover:
 
-1. `a by Agent causes f` — prosty efekt, Q1 i Q2 `involved`.
-2. Wiele reguł `causes` dla jednej akcji i jednego agenta.
-3. Wsteczne zawężanie modeli przez późniejszą obserwację i inercję (`wait`).
-4. Sprzeczne obserwacje po samych akcjach `wait`.
-5. Sprzeczne efekty `f` i `~f`, gdy warunki `g` i `h` zachodzą razem.
-6. Brak sprzeczności, gdy odpala tylko jedna z warunkowych reguł.
-7. Agent bez pasującej reguły dla akcji — pusty efekt i `involved = NO`.
-8. Jawne reguły tożsamości dla `wait`: `wait by bob causes stolen if stolen` oraz `wait by bob causes ~stolen if ~stolen`.
-9. Wzajemnie sprzeczne obserwacje w tym samym timepoincie.
-10. Akcja przygotowująca tworzy stan `g=true, h=true`, przez co późniejsza akcja ma sprzeczne efekty.
-11. Te same sprzeczne reguły, ale bez odpalenia konfliktu; wydruk pokazuje minimalne `O`.
-12. Kilka preconditions w jednej regule, np. `unlock by ag causes opened if has_key, near_door, ~blocked`.
-13. Kilka preconditions, ale jedna niespełniona — akcja wykonuje się z pustym efektem.
+1. `a by Agent causes f` — a simple effect, Q1, and Q2 `involved`.
+2. Multiple `causes` rules for one action and one agent.
+3. Later observation restricting earlier states through inertia (`wait`).
+4. Contradictory observations after only `wait` actions.
+5. Conflicting effects `f` and `~f` when conditions `g` and `h` hold together.
+6. No contradiction when only one conditional rule fires.
+7. Agent without a matching rule for an action — empty effect and `involved = NO`.
+8. Explicit identity rules for `wait`: `wait by bob causes stolen if stolen` and `wait by bob causes ~stolen if ~stolen`.
+9. Contradictory observations at the same timepoint.
+10. A preparation action creates `g=true` and `h=true`, which later causes conflicting effects.
+11. The same conflicting rules without firing the conflict; the output shows minimal `O`.
+12. Several preconditions in one rule, for example `unlock by ag causes opened if has_key, near_door, ~blocked`.
+13. Several preconditions where one missing condition blocks the effect.
 
-Uwaga praktyczna: część `if P` przyjmuje cały zbiór literałów. Wpisz warunki po przecinku albo spacjach, np. `g, h, ~p` lub `{g; h; ~p}`. Wszystkie muszą zachodzić w chwili wykonania akcji, żeby reguła odpaliła. W jednym timepoincie może być wiele obserwacji, o ile nie są sprzeczne, ale nie mogą startować dwie akcje, bo DS8 zakłada akcje sekwencyjne.
+Practical note: the `if P` part accepts a whole set of literals. Write conditions separated by commas or spaces, for example `g, h, ~p` or `{g; h; ~p}`. All literals in `P` must hold at the action time for the rule to fire. Multiple observations at one timepoint are allowed if they are consistent, but two actions cannot start at the same timepoint because DS8 assumes sequential actions.
 
-## Uruchomienie testów
+## Running tests
 
 ```bash
 python example_tests.py
 ```
 
-Testy sprawdzają m.in. wiele `causes`, wiele preconditions w jednej regule, involved, wsteczne wnioskowanie przez inercję, sprzeczne obserwacje, sprzeczne skutki akcji, przypadek agenta bez efektu oraz wszystkie przykłady z GUI.
+The tests check multiple `causes` statements, several preconditions in one rule, `involved`, backward restriction through inertia, contradictory observations, conflicting fired effects, an agent with empty effect, and all examples bundled in the GUI.
 
-## Najważniejsze poprawki
+## Main implementation points
 
-- Dopuszczone jest wiele instrukcji `A by ag causes E if P` dla tej samej akcji/agenta; dodatkowo jedna instrukcja może mieć wiele preconditions w `P`, np. `if g, h, ~p`.
-- Jeśli dwie odpalone reguły wymagają różnych wartości tego samego fluentu, scenariusz jest niespójny, bo funkcja `H` nie może mieć jednocześnie `f=0` i `f=1`.
-- Obserwacje z przyszłych timepointów filtrują dopuszczalne stany początkowe, więc działa wnioskowanie „wstecz” przez inercję.
-- Zasada inercji jest zachowana: poza minimalnym zbiorem `O(A,t+1)` wartości fluentów są kopiowane z poprzedniego timepointu.
-- `involved ag in Sc` zwraca `YES` tylko wtedy, gdy w każdym modelu agent ma przynajmniej jedną akcję z niepustym minimalnym efektem/occlusion.
-- Akcje mogą zaczynać się tylko w `t = 0, ..., T-1`, bo trwają jedną jednostkę czasu i kończą się w `t+1`.
+- Multiple statements `A by ag causes E if P` are allowed for the same action and agent; one statement may also contain many preconditions in `P`, for example `if g, h, ~p`.
+- If two fired rules require different values of the same fluent, the scenario is inconsistent because the history function `H` cannot assign both `f=0` and `f=1` at the same timepoint.
+- Observations from later timepoints filter admissible initial states, so backward reasoning is obtained through model filtering and inertia.
+- Inertia is preserved: outside the minimal set `O(A,t+1)`, fluent values are copied from the previous timepoint.
+- `involved ag in Sc` returns `YES` only when, in every admissible model, the agent has at least one action with a non-empty actual effect/minimal occlusion.
+- Actions may start only at `t = 0, ..., T-1`, because each action lasts one time unit and terminates at `t+1`.
