@@ -718,6 +718,7 @@ class App(tk.Tk):
         top.pack(fill="x", padx=8, pady=8)
         ttk.Button(top, text="Build models & show trajectory", command=self._build_and_show).pack(side="left", padx=8, pady=6)
         ttk.Button(top, text="Clear output", command=lambda: self.out.delete("1.0", "end")).pack(side="left", padx=4)
+        ttk.Button(top, text="Clean all", command=self._clean_all).pack(side="left", padx=4)
 
         q1 = ttk.LabelFrame(f, text="Query 1: holds α at t when Sc")
         q1.pack(fill="x", padx=8, pady=6)
@@ -860,6 +861,46 @@ class App(tk.Tk):
             self.out.see("end")
         except Exception as e:
             messagebox.showerror("Query error", str(e))
+
+    def _clean_all(self):
+        """Reset all fluents, actions, agents, domain, scenario, and queries."""
+        # Reset internal state
+        self.sig = Signature(T=9)
+        self.D = DomainDescription()
+        self.Sc = Scenario()
+        self.model = None
+
+        # Clear signature fields
+        self.fluents_var.set("")
+        self.actions_var.set("")
+        self.agents_var.set("")
+        self.T_var.set(9)
+
+        # Clear domain description fields
+        self.dd_effect.set("")
+        self.dd_pre.set("")
+
+        # Clear scenario fields
+        self.sc_obs_lits.set("")
+        self.sc_obs_t.set(0)
+        self.sc_t.set(0)
+
+        # Clear query fields
+        self.q_lits.set("")
+        self.q_t.set(0)
+
+        # Refresh all lists
+        self._refresh_dd_list()
+        self._refresh_action_dd()
+        self._refresh_agent_dd()
+        self._refresh_obs_list()
+        self._refresh_occ_list()
+
+        # Clear output
+        self.out.delete("1.0", "end")
+
+        # Update status
+        self._set_status("All data cleared. Apply a signature to begin.")
 
     # ----- Tab 5: Examples -----
     def _build_examples_tab(self, nb):
